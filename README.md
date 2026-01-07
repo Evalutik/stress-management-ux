@@ -141,6 +141,8 @@ Click **Deploy**. Your app will be live in ~1 minute.
 - **Output Directory:** Vite defaults to `dist` for the production build.
 - **Install Command:** We use `npm` in this project (as seen by `package-lock.json`), so `npm install` is the correct choice.
 
+> [!NOTE]
+> `vercel.json` file inthe project root automatically detected by Vercel and handles **SPA Rewrites**. It ensures that when you refresh a page like `/dev` or `/watch`, Vercel doesn't look for a specific html file but instead serves `index.html` so React Router can handle the destination. **You do not need to configure this manually.**
 ---
 
 ## 🔗 Live URLs
