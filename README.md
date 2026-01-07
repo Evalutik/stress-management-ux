@@ -106,44 +106,40 @@ VITE_FIREBASE_APP_ID=1:123456789012:web:abc123def456
 
 ## 🚀 Deployment (Vercel)
 
-Follow these exact steps to host the prototype for free on Vercel.
+Follow these exact settings to host the prototype for free on Vercel.
 
-### Option 1: Vercel Dashboard (Recommended)
+### 1. Project Configuration
+When importing your project in Vercel, ensure these settings are correct:
 
-1.  **Push to GitHub:** Ensure your latest code is pushed to a GitHub repository.
-2.  **Import Project:**
-    -   Go to [Vercel Dashboard](https://vercel.com/new).
-    -   Click **Import** next to your `stress-management-ux` repository.
-3.  **Configure Environment Variables (CRITICAL):**
-    -   Expand the **Environment Variables** section.
-    -   Open your local `.env` file.
-    -   Copy each key (e.g., `VITE_FIREBASE_API_KEY`) and its value into the Vercel fields.
-    -   **Important:** You must add all 7 `VITE_FIREBASE_...` variables for the sync to work.
-4.  **Build Settings:**
-    -   Vercel will auto-detect **Vite**.
-    -   Build Command: `npm run build`
-    -   Output Directory: `dist`
-5.  **Deploy:** Click **Deploy**. Your app will be live in ~1 minute.
+- **Framework Preset:** `Vite` (Should be auto-detected)
+- **Root Directory:** `.` (Leave default / empty)
+  > *Note: Only change this if your project is inside a subfolder of your repo.*
+- **Build Command:** `npm run build`
+- **Output Directory:** `dist`
+- **Install Command:** `npm install`
 
-### Option 2: Vercel CLI
+### 2. Environment Variables (CRITICAL)
+You **MUST** add your Firebase configuration here for the app to work.
+Expand the **Environment Variables** section and add the following from your local `.env` file:
 
-If you have the [Vercel CLI](https://vercel.com/docs/cli) installed:
+| Key | Value Source |
+|-----|--------------|
+| `VITE_FIREBASE_API_KEY` | Your `.env` file |
+| `VITE_FIREBASE_AUTH_DOMAIN` | Your `.env` file |
+| `VITE_FIREBASE_DATABASE_URL` | Your `.env` file |
+| `VITE_FIREBASE_PROJECT_ID` | Your `.env` file |
+| `VITE_FIREBASE_STORAGE_BUCKET` | Your `.env` file |
+| `VITE_FIREBASE_MESSAGING_SENDER_ID` | Your `.env` file |
+| `VITE_FIREBASE_APP_ID` | Your `.env` file |
 
-1.  Open your terminal in the project root.
-2.  Run `vercel`:
-    ```bash
-    vercel
-    ```
-3.  Follow the prompts (log in, link project).
-4.  Add environment variables via terminal for each key:
-    ```bash
-    vercel env add VITE_FIREBASE_API_KEY
-    ```
-    *(Repeat for all keys in `.env`)*
-5.  Deploy to production:
-    ```bash
-    vercel --prod
-    ```
+### 3. Deploy
+Click **Deploy**. Your app will be live in ~1 minute.
+
+### Logic Behind Settings:
+- **Root Directory:** Since your `package.json` is in the root of the repo, this should be left as default (`./`).
+- **Build Command:** `npm run build` runs the `tsc -b && vite build` script defined in your `package.json`, which compiles TypeScript and builds for production.
+- **Output Directory:** Vite defaults to `dist` for the production build.
+- **Install Command:** We use `npm` in this project (as seen by `package-lock.json`), so `npm install` is the correct choice.
 
 ---
 
