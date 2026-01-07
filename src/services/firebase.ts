@@ -1,0 +1,67 @@
+import { initializeApp } from 'firebase/app';
+import { getDatabase, ref, set, onValue, push, serverTimestamp, DataSnapshot } from 'firebase/database';
+
+// Firebase configuration from environment variables
+// Create a .env file in the project root with your Firebase credentials
+// See .env.example for the required variables
+const firebaseConfig = {
+    apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+    databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL,
+    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+    appId: import.meta.env.VITE_FIREBASE_APP_ID
+};
+
+
+const app = initializeApp(firebaseConfig);
+const database = getDatabase(app);
+
+export interface RoomData {
+    stressLevel: number;
+    lastUpdated: number;
+}
+
+export interface ThresholdEvent {
+    threshold: number;
+    timestamp: number;
+    acknowledged: boolean;
+}
+
+// Set stress level (from Dev Panel)
+export function setStressLevel(roomId: string, level: number) {
+    const roomRef = ref(database, `rooms/${roomId}`);
+    return set(roomRef, {
+        stressLevel: level,
+        lastUpdated: Date.now()
+    });
+}
+
+// Listen to stress level changes
+export function onStressLevelChange(roomId: string, callback: (data: RoomData | null) => void) {
+    const roomRef = ref(database, `rooms/${roomId}`);
+    return onValue(roomRef, (snapshot: DataSnapshot) => {
+        callback(snapshot.val() as RoomData | null);
+    });
+}
+
+// Send threshold event (from Watch)
+export function sendThresholdEvent(roomId: string, threshold: number) {
+    const eventsRef = ref(database, `rooms/${roomId}/events`);
+    return push(eventsRef, {
+        threshold,
+        timestamp: serverTimestamp(),
+        acknowledged: false
+    });
+}
+
+// Listen to threshold events (for Phone Dashboard)
+export function onThresholdEvent(roomId: string, callback: (events: Record<string, ThresholdEvent> | null) => void) {
+    const eventsRef = ref(database, `rooms/${roomId}/events`);
+    return onValue(eventsRef, (snapshot: DataSnapshot) => {
+        callback(snapshot.val() as Record<string, ThresholdEvent> | null);
+    });
+}
+
+export { database };
