@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getDatabase, ref, set, onValue, push, serverTimestamp, DataSnapshot } from 'firebase/database';
+import { getDatabase, ref, set, onValue, push, serverTimestamp, DataSnapshot, update } from 'firebase/database';
 
 // Firebase configuration from environment variables
 // Create a .env file in the project root with your Firebase credentials
@@ -29,14 +29,24 @@ export interface ThresholdEvent {
     acknowledged: boolean;
 }
 
-// Set stress level (from Dev Panel)
-export function setStressLevel(roomId: string, level: number) {
+// Reset room - clears all data and starts fresh (called when Dev Panel starts session)
+export function resetRoom(roomId: string) {
     const roomRef = ref(database, `rooms/${roomId}`);
     return set(roomRef, {
+        stressLevel: 0,
+        lastUpdated: Date.now()
+    });
+}
+
+// Set stress level (from Dev Panel) - uses update() to preserve events
+export function setStressLevel(roomId: string, level: number) {
+    const roomRef = ref(database, `rooms/${roomId}`);
+    return update(roomRef, {
         stressLevel: level,
         lastUpdated: Date.now()
     });
 }
+
 
 // Listen to stress level changes
 export function onStressLevelChange(roomId: string, callback: (data: RoomData | null) => void) {

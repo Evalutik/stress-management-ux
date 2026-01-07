@@ -36,6 +36,9 @@ The system consists of three parts communicating in real-time via the cloud:
 3.  When the Watch detects it passed 50%, it sends a signal.
 4.  The **Phone** displays a notification: *"Warning: User stress detected at 50%!"*
 
+> [!IMPORTANT]
+> **For notifications to appear on the Phone**, the Watch, User app, and Dev dashboard must be connected to the same Room ID. The Watch is responsible for detecting threshold crossings and sending alerts. Without the Watch connected, stress levels will update but no notifications will trigger.
+
 ---
 
 ## ✨ Interface Features
@@ -103,9 +106,54 @@ VITE_FIREBASE_APP_ID=1:123456789012:web:abc123def456
 
 ## 🚀 Deployment (Vercel)
 
-1. Push your code to GitHub
-2. Go to [Vercel](https://vercel.com/)
-3. Import your repository
-4. Deploy! (Vite projects are auto-detected)
+Follow these exact steps to host the prototype for free on Vercel.
 
-Your app will be live at `https://your-project.vercel.app`
+### Option 1: Vercel Dashboard (Recommended)
+
+1.  **Push to GitHub:** Ensure your latest code is pushed to a GitHub repository.
+2.  **Import Project:**
+    -   Go to [Vercel Dashboard](https://vercel.com/new).
+    -   Click **Import** next to your `stress-management-ux` repository.
+3.  **Configure Environment Variables (CRITICAL):**
+    -   Expand the **Environment Variables** section.
+    -   Open your local `.env` file.
+    -   Copy each key (e.g., `VITE_FIREBASE_API_KEY`) and its value into the Vercel fields.
+    -   **Important:** You must add all 7 `VITE_FIREBASE_...` variables for the sync to work.
+4.  **Build Settings:**
+    -   Vercel will auto-detect **Vite**.
+    -   Build Command: `npm run build`
+    -   Output Directory: `dist`
+5.  **Deploy:** Click **Deploy**. Your app will be live in ~1 minute.
+
+### Option 2: Vercel CLI
+
+If you have the [Vercel CLI](https://vercel.com/docs/cli) installed:
+
+1.  Open your terminal in the project root.
+2.  Run `vercel`:
+    ```bash
+    vercel
+    ```
+3.  Follow the prompts (log in, link project).
+4.  Add environment variables via terminal for each key:
+    ```bash
+    vercel env add VITE_FIREBASE_API_KEY
+    ```
+    *(Repeat for all keys in `.env`)*
+5.  Deploy to production:
+    ```bash
+    vercel --prod
+    ```
+
+---
+
+## 🔗 Live URLs
+
+Once deployed, your routes will be:
+-   **Main Dashboard:** `https://your-app.vercel.app/`
+-   **Watch Sync:** `https://your-app.vercel.app/watch`
+-   **Developer Panel:** `https://your-app.vercel.app/dev`
+
+> [!TIP]
+> Use the **Add to Home Screen** feature on your phone and watch browser to make the prototype feel like a native app!
+

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { setStressLevel, onThresholdEvent, ThresholdEvent } from '../services/firebase';
+import { setStressLevel, onThresholdEvent, ThresholdEvent, resetRoom } from '../services/firebase';
 import { useEffect } from 'react';
 
 export default function DevPanel() {
@@ -10,13 +10,19 @@ export default function DevPanel() {
 
     const handleConnect = () => {
         if (roomId.trim()) {
-            setIsConnected(true);
-            // Start listening to events
-            onThresholdEvent(roomId, (eventData) => {
-                if (eventData) {
-                    const eventList = Object.values(eventData);
-                    setEvents(eventList);
-                }
+            // Reset the room to clear old events and start fresh
+            resetRoom(roomId).then(() => {
+                setIsConnected(true);
+                setEvents([]); // Clear local events state
+                // Start listening to events
+                onThresholdEvent(roomId, (eventData) => {
+                    if (eventData) {
+                        const eventList = Object.values(eventData);
+                        setEvents(eventList);
+                    } else {
+                        setEvents([]);
+                    }
+                });
             });
         }
     };
@@ -99,97 +105,111 @@ export default function DevPanel() {
 
 const styles: Record<string, React.CSSProperties> = {
     container: {
-        height: '100vh',
+        minHeight: '100vh',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '2rem',
-        backgroundColor: '#1a1a2e',
+        padding: '1.5rem',
+        backgroundColor: '#0a0a0a',
         color: 'white',
-        gap: '1rem',
+        gap: '0.75rem',
     },
     header: {
         display: 'flex',
         alignItems: 'center',
-        gap: '1rem',
-        marginBottom: '2rem',
+        gap: '0.75rem',
+        marginBottom: '1.5rem',
     },
     title: {
-        fontSize: '2rem',
-        fontWeight: 'bold',
+        fontSize: '1.25rem',
+        fontWeight: '600',
+        margin: 0,
     },
     subtitle: {
-        color: '#888',
-        marginBottom: '1rem',
+        color: '#666',
+        fontSize: '0.85rem',
+        marginBottom: '0.75rem',
     },
     roomBadge: {
-        backgroundColor: '#4ade80',
-        color: '#000',
-        padding: '0.5rem 1rem',
-        borderRadius: '999px',
-        fontWeight: 'bold',
+        backgroundColor: '#FF6B8A',
+        color: '#fff',
+        padding: '0.35rem 0.75rem',
+        borderRadius: '6px',
+        fontWeight: '600',
+        fontSize: '0.8rem',
     },
     input: {
-        padding: '1rem',
-        fontSize: '1.5rem',
+        padding: '0.75rem 1rem',
+        fontSize: '1rem',
         textAlign: 'center',
         borderRadius: '8px',
-        border: 'none',
-        width: '200px',
+        border: '1px solid #333',
+        backgroundColor: '#1a1a1a',
+        color: '#fff',
+        width: '180px',
         textTransform: 'uppercase',
     },
     button: {
-        padding: '1rem 2rem',
-        fontSize: '1.2rem',
-        backgroundColor: '#4ade80',
+        padding: '0.75rem 1.5rem',
+        fontSize: '0.9rem',
+        backgroundColor: '#FF6B8A',
+        color: '#fff',
         border: 'none',
         borderRadius: '8px',
         cursor: 'pointer',
-        fontWeight: 'bold',
+        fontWeight: '600',
     },
     sliderSection: {
         width: '100%',
-        maxWidth: '500px',
+        maxWidth: '360px',
         textAlign: 'center',
     },
     sliderLabel: {
-        fontSize: '1.5rem',
-        marginBottom: '1rem',
+        fontSize: '1rem',
+        marginBottom: '0.75rem',
+        fontWeight: '500',
     },
     slider: {
         width: '100%',
-        height: '20px',
+        height: '8px',
         cursor: 'pointer',
+        accentColor: '#FF6B8A',
     },
     sliderMarks: {
         display: 'flex',
         justifyContent: 'space-between',
-        marginTop: '0.5rem',
-        color: '#888',
+        marginTop: '0.4rem',
+        color: '#666',
+        fontSize: '0.7rem',
     },
     logSection: {
         width: '100%',
-        maxWidth: '500px',
-        marginTop: '2rem',
+        maxWidth: '360px',
+        marginTop: '1.5rem',
     },
     logTitle: {
-        marginBottom: '1rem',
-        borderBottom: '1px solid #333',
-        paddingBottom: '0.5rem',
+        fontSize: '0.9rem',
+        marginBottom: '0.75rem',
+        borderBottom: '1px solid #222',
+        paddingBottom: '0.4rem',
+        fontWeight: '500',
     },
     logList: {
-        maxHeight: '200px',
+        maxHeight: '150px',
         overflowY: 'auto',
     },
     logItem: {
-        padding: '0.75rem',
-        backgroundColor: '#2a2a4e',
-        borderRadius: '4px',
-        marginBottom: '0.5rem',
+        padding: '0.5rem 0.75rem',
+        backgroundColor: '#1a1a1a',
+        borderRadius: '6px',
+        marginBottom: '0.4rem',
+        fontSize: '0.8rem',
+        borderLeft: '3px solid #FF6B8A',
     },
     noEvents: {
-        color: '#666',
+        color: '#444',
         fontStyle: 'italic',
+        fontSize: '0.8rem',
     },
 };

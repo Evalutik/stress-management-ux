@@ -1,0 +1,130 @@
+import { Home, Smile, Settings, ChevronRight, History } from 'lucide-react';
+import { Activity, activities, dailyStats, getStressEmoji, getStressColor } from './data';
+
+interface ToastNotification {
+    id: number;
+    message: string;
+    threshold: number;
+}
+
+interface HomeViewProps {
+    stressLevel: number;
+    toasts: ToastNotification[];
+    onTabChange: (tab: 'stress' | 'activities') => void;
+    onHistoryClick: () => void;
+    onDailyStatsClick: () => void;
+    onSettingsClick: () => void;
+    onActivitySelect: (activity: Activity) => void;
+    onNavigate: (view: 'home' | 'activities') => void;
+    activeTab: 'stress' | 'activities';
+}
+
+export default function HomeView({
+    stressLevel,
+    toasts,
+    onTabChange,
+    onHistoryClick,
+    onDailyStatsClick,
+    onSettingsClick,
+    onActivitySelect,
+    onNavigate,
+    activeTab
+}: HomeViewProps) {
+    return (
+        <div className="dashboard-container">
+            {/* Toast Notifications */}
+            <div className="toast-container">
+                {toasts.map((toast) => (
+                    <div key={toast.id} className={`toast toast-${toast.threshold >= 75 ? 'danger' : toast.threshold >= 50 ? 'warning' : 'info'}`}>
+                        <span className="toast-icon">⚠️</span>
+                        <span>{toast.message}</span>
+                    </div>
+                ))}
+            </div>
+
+            {/* Header */}
+            <header className="dashboard-header">
+                <div className="tabs">
+                    <button
+                        className={`tab ${activeTab === 'stress' ? 'active' : ''}`}
+                        onClick={() => onTabChange('stress')}
+                    >
+                        <Smile size={14} />
+                        Stress status
+                    </button>
+                    <button
+                        className={`tab ${activeTab === 'activities' ? 'active' : ''}`}
+                        onClick={() => {
+                            onTabChange('activities');
+                            onNavigate('activities');
+                        }}
+                    >
+                        <span className="tab-icon-text">〜</span>
+                        Relaxing Activities
+                    </button>
+                </div>
+                <button className="history-button" onClick={onHistoryClick}>
+                    <History size={18} />
+                </button>
+            </header>
+
+            {/* Main Content */}
+            <main className="dashboard-main">
+                {/* Big Emoji Display */}
+                <div className="stress-display">
+                    <div className="emoji-circle" style={{ backgroundColor: getStressColor(stressLevel) }}>
+                        <span className="stress-emoji">{getStressEmoji(stressLevel)}</span>
+                    </div>
+                </div>
+
+                {/* Daily Stats */}
+                <section className="section">
+                    <div className="section-header" onClick={onDailyStatsClick}>
+                        <h2 className="section-title">Daily stats</h2>
+                        <ChevronRight size={18} className="section-chevron" />
+                    </div>
+                    <div className="daily-stats">
+                        {dailyStats.map((stat, i) => (
+                            <div key={i} className="stat-item">
+                                <div className="stat-emoji-circle" style={{ backgroundColor: getStressColor(stat.level) }}>
+                                    <span className="stat-emoji">{getStressEmoji(stat.level)}</span>
+                                </div>
+                                <span className="stat-date">{stat.date}</span>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+
+                {/* Activities */}
+                <section className="section">
+                    <div className="section-header" onClick={() => onNavigate('activities')}>
+                        <h2 className="section-title">Choose a relaxing activity</h2>
+                        <ChevronRight size={18} className="section-chevron" />
+                    </div>
+                    <div className="activities-scroll">
+                        {activities.filter(a => a.image).map((activity, i) => (
+                            <div
+                                key={i}
+                                className="activity-card"
+                                onClick={() => onActivitySelect(activity)}
+                            >
+                                <div className="activity-image">
+                                    {activity.image && <img src={activity.image} alt={activity.name} />}
+                                </div>
+                                <span className="activity-name">{activity.name}</span>
+                                <span className="activity-rating">{activity.rating}</span>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+            </main>
+
+            {/* Bottom Navigation */}
+            <nav className="bottom-nav">
+                <button className="nav-item active" onClick={() => onNavigate('home')}><Home size={22} /></button>
+                <button className="nav-item" onClick={() => onNavigate('activities')}><Smile size={22} /></button>
+                <button className="nav-item" onClick={onSettingsClick}><Settings size={22} /></button>
+            </nav>
+        </div>
+    );
+}
