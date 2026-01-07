@@ -1,4 +1,4 @@
-# Stress Management UX Prototype 🧘‍♂️⌚
+# Stress Management UX Prototype
 
 This project is a high-fidelity UX prototype designed to test a remote-controlled "LED Stress Bracelet" concept using a Galaxy Watch, a Smartphone, and a Developer Control Panel.
 
@@ -43,16 +43,16 @@ The system consists of three parts communicating in real-time via the cloud:
 
 ## ✨ Interface Features
 
-### 💻 Developer Page (`/dev`)
+### Developer Page (`/dev`)
 -   **Control Level:** Slider (0-100%).
 -   **Event Log:** See exactly when the watch triggered a threshold signal.
 
-### 🤳 Phone App (`/`)
+### Phone App (`/`)
 -   **Live Sync:** View the same stress percentage set by the dev.
 -   **Real-time Alerts:** Reactive UI changes when levels get high.
 -   **UX Prototype:** High-fidelity cards for relaxing activities.
 
-### ⌚ Watch "LED" Page (`/watch`)
+### Watch "LED" Page (`/watch`)
 -   **Zero UI:** Once connected, the screen is just a pure glowing color.
 -   **Threshold Signals:** Auto-reports 25%, 50%, 75%, and 100% stress events to the Phone.
 -   **Compatibility:** Optimized for Tizen browsers.
