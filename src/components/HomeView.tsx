@@ -10,24 +10,30 @@ interface ToastNotification {
 interface HomeViewProps {
     stressLevel: number;
     toasts: ToastNotification[];
+    snoozeFeedback: string | null;
     onTabChange: (tab: 'stress' | 'activities') => void;
     onHistoryClick: () => void;
     onDailyStatsClick: () => void;
     onSettingsClick: () => void;
     onActivitySelect: (activity: Activity) => void;
     onNavigate: (view: 'home' | 'activities') => void;
+    onSnooze: (toastId: number) => void;
+    onDoActivity: (toast: ToastNotification) => void;
     activeTab: 'stress' | 'activities';
 }
 
 export default function HomeView({
     stressLevel,
     toasts,
+    snoozeFeedback,
     onTabChange,
     onHistoryClick,
     onDailyStatsClick,
     onSettingsClick,
     onActivitySelect,
     onNavigate,
+    onSnooze,
+    onDoActivity,
     activeTab
 }: HomeViewProps) {
     return (
@@ -36,10 +42,25 @@ export default function HomeView({
             <div className="toast-container">
                 {toasts.map((toast) => (
                     <div key={toast.id} className={`toast toast-${toast.threshold >= 75 ? 'danger' : toast.threshold >= 50 ? 'warning' : 'info'}`}>
-                        <span className="toast-icon">⚠️</span>
-                        <span>{toast.message}</span>
+                        <div className="toast-content">
+                            <span className="toast-icon">⚠️</span>
+                            <span>{toast.message}</span>
+                        </div>
+                        <div className="toast-actions">
+                            <button className="toast-btn toast-btn-snooze" onClick={() => onSnooze(toast.id)}>
+                                Snooze
+                            </button>
+                            <button className="toast-btn toast-btn-activity" onClick={() => onDoActivity(toast)}>
+                                Do Activity
+                            </button>
+                        </div>
                     </div>
                 ))}
+                {snoozeFeedback && (
+                    <div className="snooze-feedback">
+                        {snoozeFeedback}
+                    </div>
+                )}
             </div>
 
             {/* Header */}

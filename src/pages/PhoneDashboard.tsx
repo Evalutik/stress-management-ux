@@ -38,6 +38,8 @@ export default function PhoneDashboard() {
     const [toasts, setToasts] = useState<ToastNotification[]>([]);
     const [notificationHistory, setNotificationHistory] = useState<HistoryNotification[]>([]);
     const [activeNotificationId, setActiveNotificationId] = useState<number | null>(null);
+    const [snoozeDurationMinutes, setSnoozeDurationMinutes] = useState(15);
+    const [snoozeFeedback, setSnoozeFeedback] = useState<string | null>(null);
     const lastEventCountRef = useRef(0);
     const toastIdRef = useRef(0);
 
@@ -64,11 +66,7 @@ export default function PhoneDashboard() {
                                 timestamp: new Date()
                             };
 
-                            setNotificationHistory(prev => [notification, ...prev]);
                             setToasts(prev => [...prev, notification]);
-                            setTimeout(() => {
-                                setToasts(prev => prev.filter(t => t.id !== id));
-                            }, 5000);
                         });
                         lastEventCountRef.current = eventList.length;
                     }
@@ -110,6 +108,42 @@ export default function PhoneDashboard() {
         setCurrentView('home');
         setStressLevel(0);
         setNotificationHistory([]);
+    };
+
+    const handleSnooze = (toastId: number) => {
+        const toast = toasts.find(t => t.id === toastId);
+        if (toast) {
+            // Add to history without activity
+            const historyNotif: HistoryNotification = {
+                id: toast.id,
+                message: toast.message,
+                threshold: toast.threshold,
+                timestamp: new Date()
+            };
+            setNotificationHistory(prev => [historyNotif, ...prev]);
+        }
+        // Remove from active toasts
+        setToasts(prev => prev.filter(t => t.id !== toastId));
+        // Show feedback
+        setSnoozeFeedback(`Reminder set for ${snoozeDurationMinutes} minutes`);
+        setTimeout(() => setSnoozeFeedback(null), 3000);
+    };
+
+    const handleDoActivity = (toast: ToastNotification) => {
+        // Add to history first
+        const historyNotif: HistoryNotification = {
+            id: toast.id,
+            message: toast.message,
+            threshold: toast.threshold,
+            timestamp: new Date()
+        };
+        setNotificationHistory(prev => [historyNotif, ...prev]);
+        // Remove from active toasts
+        setToasts(prev => prev.filter(t => t.id !== toast.id));
+        // Set active notification for activity assignment
+        setActiveNotificationId(toast.id);
+        // Navigate to activities
+        setCurrentView('activities');
     };
 
     // Login Screen
@@ -176,6 +210,8 @@ export default function PhoneDashboard() {
         return (
             <SettingsView
                 roomId={roomId}
+                snoozeDuration={snoozeDurationMinutes}
+                onSnoozeDurationChange={setSnoozeDurationMinutes}
                 onBack={() => setCurrentView('home')}
                 onNavigate={handleNavigate}
                 onLogout={handleLogout}
@@ -188,6 +224,7 @@ export default function PhoneDashboard() {
         <HomeView
             stressLevel={stressLevel}
             toasts={toasts}
+            snoozeFeedback={snoozeFeedback}
             activeTab={activeTab}
             onTabChange={setActiveTab}
             onHistoryClick={() => setCurrentView('history')}
@@ -195,6 +232,8 @@ export default function PhoneDashboard() {
             onSettingsClick={() => setCurrentView('settings')}
             onActivitySelect={handleActivitySelect}
             onNavigate={handleNavigate}
+            onSnooze={handleSnooze}
+            onDoActivity={handleDoActivity}
         />
     );
 }

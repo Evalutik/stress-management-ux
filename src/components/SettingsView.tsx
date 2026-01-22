@@ -2,12 +2,23 @@ import { ChevronLeft, Home, Smile, Settings, ExternalLink, LogOut } from 'lucide
 
 interface SettingsViewProps {
     roomId: string;
+    snoozeDuration: number;
+    onSnoozeDurationChange: (minutes: number) => void;
     onBack: () => void;
     onNavigate: (view: 'home' | 'activities') => void;
     onLogout: () => void;
 }
 
-export default function SettingsView({ roomId, onBack, onNavigate, onLogout }: SettingsViewProps) {
+export default function SettingsView({
+    roomId,
+    snoozeDuration,
+    onSnoozeDurationChange,
+    onBack,
+    onNavigate,
+    onLogout
+}: SettingsViewProps) {
+    const snoozeOptions = [5, 10, 15, 30];
+
     return (
         <div className="dashboard-container">
             <header className="detail-header">
@@ -34,6 +45,25 @@ export default function SettingsView({ roomId, onBack, onNavigate, onLogout }: S
                     <div className="settings-item">
                         <span className="settings-label">Room ID</span>
                         <span className="settings-value">{roomId}</span>
+                    </div>
+                </div>
+
+                {/* Notifications Settings */}
+                <div className="settings-section">
+                    <h3 className="settings-section-title">Notifications</h3>
+                    <div className="settings-item">
+                        <span className="settings-label">Snooze Duration</span>
+                        <select
+                            className="settings-select"
+                            value={snoozeDuration}
+                            onChange={(e) => onSnoozeDurationChange(Number(e.target.value))}
+                        >
+                            {snoozeOptions.map((mins) => (
+                                <option key={mins} value={mins}>
+                                    {mins} minutes
+                                </option>
+                            ))}
+                        </select>
                     </div>
                 </div>
 
