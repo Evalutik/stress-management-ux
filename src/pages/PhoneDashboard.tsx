@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { onStressLevelChange, onThresholdEvent, RoomData, ThresholdEvent } from '../services/firebase';
 import './PhoneDashboard.css';
 
@@ -10,23 +10,40 @@ import ActivityDetailView from '../components/ActivityDetailView';
 import ActivitiesListView from '../components/ActivitiesListView';
 import DailyStatsView from '../components/DailyStatsView';
 import SettingsView from '../components/SettingsView';
-import { Activity } from '../components/data';
+import ActivityInstructionView from '../components/ActivityInstructionView';
+import RatingModal from '../components/RatingModal';
+import ChatView from '../components/ChatView';
+import { Activity, getRandomActivity, activities } from '../components/data';
 
 interface HistoryNotification {
     id: number;
     message: string;
     threshold: number;
     timestamp: Date;
-    assignedActivity?: Activity;
+    suggestedActivity: Activity;
+    wasSnoozed: boolean;
+    activityPerformed: boolean;
 }
 
 interface ToastNotification {
     id: number;
     message: string;
     threshold: number;
+    suggestedActivity: Activity;
 }
 
-type ViewType = 'home' | 'activities' | 'activityDetail' | 'history' | 'dailyStats' | 'settings';
+type ViewType = 'home' | 'activities' | 'activityDetail' | 'history' | 'dailyStats' | 'settings' | 'activityInstruction' | 'chat';
+
+// Initialize random activity stats
+const initializeActivityStats = () => {
+    const counts: Record<string, number> = {};
+    const ratings: Record<string, number> = {};
+    activities.forEach(activity => {
+        counts[activity.name] = Math.floor(Math.random() * 10) + 1;
+        ratings[activity.name] = Math.round((Math.random() * 3 + 2) * 10) / 10; // 2.0-5.0
+    });
+    return { counts, ratings };
+};
 
 export default function PhoneDashboard() {
     const [roomId, setRoomId] = useState('');
@@ -40,8 +57,20 @@ export default function PhoneDashboard() {
     const [activeNotificationId, setActiveNotificationId] = useState<number | null>(null);
     const [snoozeDurationMinutes, setSnoozeDurationMinutes] = useState(15);
     const [snoozeFeedback, setSnoozeFeedback] = useState<string | null>(null);
+    const [activityCounts, setActivityCounts] = useState<Record<string, number>>({});
+    const [activityRatings, setActivityRatings] = useState<Record<string, number>>({});
+    const [showRatingModal, setShowRatingModal] = useState(false);
+    const [pendingRatingActivity, setPendingRatingActivity] = useState<Activity | null>(null);
+    const [chatActivityContext, setChatActivityContext] = useState<Activity | null>(null);
     const lastEventCountRef = useRef(0);
     const toastIdRef = useRef(0);
+
+    // Initialize activity stats on first load
+    useEffect(() => {
+        const { counts, ratings } = initializeActivityStats();
+        setActivityCounts(counts);
+        setActivityRatings(ratings);
+    }, []);
 
     const handleConnect = () => {
         if (roomId.trim()) {
@@ -59,14 +88,33 @@ export default function PhoneDashboard() {
                         const newEvents = eventList.slice(lastEventCountRef.current);
                         newEvents.forEach((event: ThresholdEvent) => {
                             const id = toastIdRef.current++;
-                            const notification = {
+                            const suggestedActivity = getRandomActivity();
+
+                            const notification: ToastNotification = {
                                 id,
-                                message: `Stress level reached ${event.threshold}%`,
+                                message: `Stress at ${event.threshold}%! Try: ${suggestedActivity.name}`,
                                 threshold: event.threshold,
-                                timestamp: new Date()
+                                suggestedActivity
                             };
 
                             setToasts(prev => [...prev, notification]);
+
+                            // Also add to history immediately
+                            const historyNotif: HistoryNotification = {
+                                id,
+                                message: `Stress level reached ${event.threshold}%`,
+                                threshold: event.threshold,
+                                timestamp: new Date(),
+                                suggestedActivity,
+                                wasSnoozed: false,
+                                activityPerformed: false
+                            };
+                            setNotificationHistory(prev => [historyNotif, ...prev]);
+
+                            // Auto-remove toast after animation completes (5s)
+                            setTimeout(() => {
+                                setToasts(prev => prev.filter(t => t.id !== id));
+                            }, 5000);
                         });
                         lastEventCountRef.current = eventList.length;
                     }
@@ -77,12 +125,11 @@ export default function PhoneDashboard() {
 
     const handleActivitySelect = (activity: Activity) => {
         if (activeNotificationId !== null) {
-            setNotificationHistory(prev => prev.map(n =>
-                n.id === activeNotificationId ? { ...n, assignedActivity: activity } : n
-            ));
-            setActiveNotificationId(null);
-            setCurrentView('history');
+            // User is selecting an alternative activity from the list
+            setSelectedActivity(activity);
+            setCurrentView('activityInstruction');
         } else {
+            // Normal activity selection from activities tab
             setSelectedActivity(activity);
             setCurrentView('activityDetail');
         }
@@ -94,6 +141,8 @@ export default function PhoneDashboard() {
     };
 
     const handleNavigate = (view: ViewType) => {
+        // Clear active toasts when leaving home
+        setToasts([]);
         setCurrentView(view);
         if (view === 'activities') {
             setActiveTab('activities');
@@ -102,26 +151,28 @@ export default function PhoneDashboard() {
         }
     };
 
+    const handleHistoryClick = () => {
+        setToasts([]);
+        setCurrentView('history');
+    };
+
     const handleLogout = () => {
         setIsConnected(false);
         setRoomId('');
         setCurrentView('home');
         setStressLevel(0);
         setNotificationHistory([]);
+        // Re-initialize stats on logout
+        const { counts, ratings } = initializeActivityStats();
+        setActivityCounts(counts);
+        setActivityRatings(ratings);
     };
 
     const handleSnooze = (toastId: number) => {
-        const toast = toasts.find(t => t.id === toastId);
-        if (toast) {
-            // Add to history without activity
-            const historyNotif: HistoryNotification = {
-                id: toast.id,
-                message: toast.message,
-                threshold: toast.threshold,
-                timestamp: new Date()
-            };
-            setNotificationHistory(prev => [historyNotif, ...prev]);
-        }
+        // Mark as snoozed in history
+        setNotificationHistory(prev => prev.map(n =>
+            n.id === toastId ? { ...n, wasSnoozed: true } : n
+        ));
         // Remove from active toasts
         setToasts(prev => prev.filter(t => t.id !== toastId));
         // Show feedback
@@ -130,20 +181,87 @@ export default function PhoneDashboard() {
     };
 
     const handleDoActivity = (toast: ToastNotification) => {
-        // Add to history first
-        const historyNotif: HistoryNotification = {
-            id: toast.id,
-            message: toast.message,
-            threshold: toast.threshold,
-            timestamp: new Date()
-        };
-        setNotificationHistory(prev => [historyNotif, ...prev]);
         // Remove from active toasts
         setToasts(prev => prev.filter(t => t.id !== toast.id));
-        // Set active notification for activity assignment
+        // Set the suggested activity and notification id
         setActiveNotificationId(toast.id);
-        // Navigate to activities
-        setCurrentView('activities');
+        setSelectedActivity(toast.suggestedActivity);
+        // Navigate to instruction view
+        setCurrentView('activityInstruction');
+    };
+
+    const handleDoSuggestedFromHistory = (notificationId: number, activity: Activity) => {
+        setActiveNotificationId(notificationId);
+        setSelectedActivity(activity);
+        setCurrentView('activityInstruction');
+    };
+
+    const handleActivityDone = () => {
+        if (selectedActivity) {
+            // Increment activity count
+            setActivityCounts(prev => ({
+                ...prev,
+                [selectedActivity.name]: (prev[selectedActivity.name] || 0) + 1
+            }));
+            // Store the activity for rating
+            setPendingRatingActivity(selectedActivity);
+        }
+        // Mark as performed in history
+        if (activeNotificationId !== null) {
+            setNotificationHistory(prev => prev.map(n =>
+                n.id === activeNotificationId ? { ...n, activityPerformed: true } : n
+            ));
+        }
+        // Show rating modal
+        setShowRatingModal(true);
+    };
+
+    const handleRatingSubmit = (rating: number) => {
+        if (pendingRatingActivity) {
+            // Update the rating (weighted average with existing)
+            setActivityRatings(prev => {
+                const currentRating = prev[pendingRatingActivity.name] || 3;
+                const currentCount = activityCounts[pendingRatingActivity.name] || 1;
+                // Simple weighted average: blend new rating with existing
+                const newRating = Math.round(((currentRating * (currentCount - 1) + rating) / currentCount) * 10) / 10;
+                return {
+                    ...prev,
+                    [pendingRatingActivity.name]: Math.min(5, Math.max(1, newRating))
+                };
+            });
+        }
+        // Close modal and reset
+        setShowRatingModal(false);
+        setPendingRatingActivity(null);
+        setActiveNotificationId(null);
+        setSelectedActivity(null);
+        setCurrentView('home');
+    };
+
+    const handleRatingSkip = () => {
+        // Just close without updating rating
+        setShowRatingModal(false);
+        setPendingRatingActivity(null);
+        setActiveNotificationId(null);
+        setSelectedActivity(null);
+        setCurrentView('home');
+    };
+
+    const handleActivityBack = () => {
+        // Activity was not completed, just navigate back
+        setActiveNotificationId(null);
+        setSelectedActivity(null);
+        setCurrentView('home');
+    };
+
+    const handleGoToActivity = (activity: Activity) => {
+        setSelectedActivity(activity);
+        setCurrentView('activityInstruction');
+    };
+
+    const handleAskAI = (activity: Activity) => {
+        setChatActivityContext(activity);
+        setCurrentView('chat');
     };
 
     // Login Screen
@@ -157,6 +275,29 @@ export default function PhoneDashboard() {
         );
     }
 
+    // Rating Modal (overlay)
+    if (showRatingModal && pendingRatingActivity) {
+        return (
+            <RatingModal
+                activityName={pendingRatingActivity.name}
+                onSubmit={handleRatingSubmit}
+                onSkip={handleRatingSkip}
+            />
+        );
+    }
+
+    // Activity Instruction View
+    if (currentView === 'activityInstruction' && selectedActivity) {
+        return (
+            <ActivityInstructionView
+                activity={selectedActivity}
+                onBack={handleActivityBack}
+                onDone={handleActivityDone}
+                onAskAI={handleAskAI}
+            />
+        );
+    }
+
     // History View
     if (currentView === 'history') {
         return (
@@ -164,6 +305,7 @@ export default function PhoneDashboard() {
                 notificationHistory={notificationHistory}
                 onBack={() => setCurrentView('home')}
                 onViewActivities={handleViewActivities}
+                onDoSuggested={handleDoSuggestedFromHistory}
                 onNavigate={handleNavigate}
                 onSettingsClick={() => setCurrentView('settings')}
             />
@@ -175,9 +317,13 @@ export default function PhoneDashboard() {
         return (
             <ActivityDetailView
                 activity={selectedActivity}
-                onBack={() => setCurrentView('home')}
+                activityCount={activityCounts[selectedActivity.name] || 0}
+                activityRating={activityRatings[selectedActivity.name] || 0}
+                onBack={() => setCurrentView('activities')}
+                onGoToActivity={handleGoToActivity}
                 onNavigate={handleNavigate}
                 onSettingsClick={() => setCurrentView('settings')}
+                onAskAI={handleAskAI}
             />
         );
     }
@@ -186,6 +332,8 @@ export default function PhoneDashboard() {
     if (currentView === 'activities') {
         return (
             <ActivitiesListView
+                activityCounts={activityCounts}
+                activityRatings={activityRatings}
                 onBack={() => setCurrentView('home')}
                 onActivitySelect={handleActivitySelect}
                 onNavigate={handleNavigate}
@@ -201,6 +349,19 @@ export default function PhoneDashboard() {
                 onBack={() => setCurrentView('home')}
                 onNavigate={handleNavigate}
                 onSettingsClick={() => setCurrentView('settings')}
+            />
+        );
+    }
+
+    // Chat View
+    if (currentView === 'chat') {
+        return (
+            <ChatView
+                roomId={roomId}
+                onNavigate={handleNavigate}
+                onSettingsClick={() => setCurrentView('settings')}
+                activityContext={chatActivityContext}
+                onClearContext={() => setChatActivityContext(null)}
             />
         );
     }
@@ -227,7 +388,7 @@ export default function PhoneDashboard() {
             snoozeFeedback={snoozeFeedback}
             activeTab={activeTab}
             onTabChange={setActiveTab}
-            onHistoryClick={() => setCurrentView('history')}
+            onHistoryClick={handleHistoryClick}
             onDailyStatsClick={() => setCurrentView('dailyStats')}
             onSettingsClick={() => setCurrentView('settings')}
             onActivitySelect={handleActivitySelect}

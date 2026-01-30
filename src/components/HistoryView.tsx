@@ -1,4 +1,4 @@
-import { ChevronLeft, Home, Smile, Settings, ChevronRight } from 'lucide-react';
+import { ChevronLeft, Home, Smile, Settings, MessageCircle } from 'lucide-react';
 import { Activity, getStressEmoji } from './data';
 
 interface HistoryNotification {
@@ -6,14 +6,17 @@ interface HistoryNotification {
     message: string;
     threshold: number;
     timestamp: Date;
-    assignedActivity?: Activity;
+    suggestedActivity: Activity;
+    wasSnoozed: boolean;
+    activityPerformed: boolean;
 }
 
 interface HistoryViewProps {
     notificationHistory: HistoryNotification[];
     onBack: () => void;
     onViewActivities: (notificationId: number) => void;
-    onNavigate: (view: 'home' | 'activities') => void;
+    onDoSuggested: (notificationId: number, activity: Activity) => void;
+    onNavigate: (view: 'home' | 'activities' | 'chat') => void;
     onSettingsClick: () => void;
 }
 
@@ -21,6 +24,7 @@ export default function HistoryView({
     notificationHistory,
     onBack,
     onViewActivities,
+    onDoSuggested,
     onNavigate,
     onSettingsClick
 }: HistoryViewProps) {
@@ -35,6 +39,10 @@ export default function HistoryView({
             </header>
 
             <main className="dashboard-main">
+                <p className="section-description">
+                    View your stress notifications and track which activities you've completed.
+                </p>
+
                 {notificationHistory.length === 0 ? (
                     <div className="empty-state">
                         <p>No notifications yet</p>
@@ -52,30 +60,42 @@ export default function HistoryView({
                                             <span className="history-time">
                                                 {notif.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                             </span>
+                                            {/* Status badges */}
+                                            <div className="history-status">
+                                                {notif.wasSnoozed && (
+                                                    <span className="history-badge history-badge-snoozed">Snoozed</span>
+                                                )}
+                                                {notif.activityPerformed ? (
+                                                    <span className="history-badge history-badge-completed">Completed ✓</span>
+                                                ) : (
+                                                    <span className="history-badge history-badge-pending">Not done</span>
+                                                )}
+                                            </div>
+                                            {/* Suggested activity */}
+                                            <div className="history-suggested">
+                                                Suggested: <span className="history-suggested-name">{notif.suggestedActivity.name}</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* Activity assignment section */}
-                                <div className="history-activity-section">
-                                    {notif.assignedActivity ? (
-                                        <div
-                                            className="history-assigned-activity"
-                                            onClick={() => onViewActivities(notif.id)}
-                                        >
-                                            <span className="assigned-label">Chosen activity:</span>
-                                            <span className="assigned-name">{notif.assignedActivity.name}</span>
-                                            <ChevronRight size={14} className="assigned-chevron" />
-                                        </div>
-                                    ) : (
+                                {/* Action buttons - only show if not performed */}
+                                {!notif.activityPerformed && (
+                                    <div className="history-actions">
                                         <button
-                                            className="history-view-activities-btn"
+                                            className="history-action-btn history-action-btn-do"
+                                            onClick={() => onDoSuggested(notif.id, notif.suggestedActivity)}
+                                        >
+                                            Do Suggested
+                                        </button>
+                                        <button
+                                            className="history-action-btn history-action-btn-choose"
                                             onClick={() => onViewActivities(notif.id)}
                                         >
-                                            View activities
+                                            Choose Other
                                         </button>
-                                    )}
-                                </div>
+                                    </div>
+                                )}
                             </div>
                         ))}
                     </div>
@@ -85,6 +105,7 @@ export default function HistoryView({
             <nav className="bottom-nav">
                 <button className="nav-item" onClick={() => onNavigate('home')}><Home size={22} /></button>
                 <button className="nav-item" onClick={() => onNavigate('activities')}><Smile size={22} /></button>
+                <button className="nav-item" onClick={() => onNavigate('chat')}><MessageCircle size={22} /></button>
                 <button className="nav-item" onClick={onSettingsClick}><Settings size={22} /></button>
             </nav>
         </div>

@@ -74,4 +74,50 @@ export function onThresholdEvent(roomId: string, callback: (events: Record<strin
     });
 }
 
+// Chat Message Interface
+export interface ChatMessage {
+    id?: string;
+    sender: 'user' | 'bot';
+    text: string;
+    timestamp: number;
+}
+
+// Send chat message (from Phone - user message)
+export function sendChatMessage(roomId: string, text: string) {
+    const chatRef = ref(database, `rooms/${roomId}/chat`);
+    return push(chatRef, {
+        sender: 'user',
+        text,
+        timestamp: Date.now()
+    });
+}
+
+// Send bot response (from Dev Dashboard)
+export function sendBotResponse(roomId: string, text: string) {
+    const chatRef = ref(database, `rooms/${roomId}/chat`);
+    return push(chatRef, {
+        sender: 'bot',
+        text,
+        timestamp: Date.now()
+    });
+}
+
+// Listen to chat messages
+export function onChatMessages(roomId: string, callback: (messages: ChatMessage[]) => void) {
+    const chatRef = ref(database, `rooms/${roomId}/chat`);
+    return onValue(chatRef, (snapshot: DataSnapshot) => {
+        const data = snapshot.val();
+        if (data) {
+            const messages: ChatMessage[] = Object.entries(data).map(([id, msg]) => ({
+                id,
+                ...(msg as Omit<ChatMessage, 'id'>)
+            }));
+            messages.sort((a, b) => a.timestamp - b.timestamp);
+            callback(messages);
+        } else {
+            callback([]);
+        }
+    });
+}
+
 export { database };

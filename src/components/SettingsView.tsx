@@ -1,11 +1,11 @@
-import { ChevronLeft, Home, Smile, Settings, ExternalLink, LogOut } from 'lucide-react';
+import { ChevronLeft, Home, Smile, Settings, ExternalLink, LogOut, MessageCircle } from 'lucide-react';
 
 interface SettingsViewProps {
     roomId: string;
     snoozeDuration: number;
     onSnoozeDurationChange: (minutes: number) => void;
     onBack: () => void;
-    onNavigate: (view: 'home' | 'activities') => void;
+    onNavigate: (view: 'home' | 'activities' | 'chat') => void;
     onLogout: () => void;
 }
 
@@ -94,6 +94,7 @@ export default function SettingsView({
             <nav className="bottom-nav">
                 <button className="nav-item" onClick={() => onNavigate('home')}><Home size={22} /></button>
                 <button className="nav-item" onClick={() => onNavigate('activities')}><Smile size={22} /></button>
+                <button className="nav-item" onClick={() => onNavigate('chat')}><MessageCircle size={22} /></button>
                 <button className="nav-item active"><Settings size={22} /></button>
             </nav>
         </div>

@@ -1,9 +1,9 @@
-import { ChevronLeft, Home, Smile, Settings } from 'lucide-react';
+import { ChevronLeft, Home, Smile, Settings, MessageCircle } from 'lucide-react';
 import { dailyStats, getStressEmoji, getStressColor } from './data';
 
 interface DailyStatsViewProps {
     onBack: () => void;
-    onNavigate: (view: 'home' | 'activities') => void;
+    onNavigate: (view: 'home' | 'activities' | 'chat') => void;
     onSettingsClick: () => void;
 }
 
@@ -45,6 +45,7 @@ export default function DailyStatsView({ onBack, onNavigate, onSettingsClick }: 
             <nav className="bottom-nav">
                 <button className="nav-item active" onClick={() => onNavigate('home')}><Home size={22} /></button>
                 <button className="nav-item" onClick={() => onNavigate('activities')}><Smile size={22} /></button>
+                <button className="nav-item" onClick={() => onNavigate('chat')}><MessageCircle size={22} /></button>
                 <button className="nav-item" onClick={onSettingsClick}><Settings size={22} /></button>
             </nav>
         </div>

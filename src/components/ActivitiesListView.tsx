@@ -1,14 +1,23 @@
-import { ChevronLeft, Home, Smile, Settings, ChevronRight } from 'lucide-react';
+import { ChevronLeft, Home, Smile, Settings, ChevronRight, MessageCircle } from 'lucide-react';
 import { Activity, activities } from './data';
 
 interface ActivitiesListViewProps {
+    activityCounts: Record<string, number>;
+    activityRatings: Record<string, number>;
     onBack: () => void;
     onActivitySelect: (activity: Activity) => void;
-    onNavigate: (view: 'home' | 'activities') => void;
+    onNavigate: (view: 'home' | 'activities' | 'chat') => void;
     onSettingsClick: () => void;
 }
 
-export default function ActivitiesListView({ onBack, onActivitySelect, onNavigate, onSettingsClick }: ActivitiesListViewProps) {
+export default function ActivitiesListView({
+    activityCounts,
+    activityRatings,
+    onBack,
+    onActivitySelect,
+    onNavigate,
+    onSettingsClick
+}: ActivitiesListViewProps) {
     return (
         <div className="dashboard-container">
             <header className="detail-header">
@@ -20,6 +29,10 @@ export default function ActivitiesListView({ onBack, onActivitySelect, onNavigat
             </header>
 
             <main className="dashboard-main">
+                <p className="section-description">
+                    Choose an activity below to help reduce your stress levels. Each activity has been designed to promote relaxation.
+                </p>
+
                 <div className="activities-table">
                     <div className="table-header">
                         <span className="table-col activity-col">ACTIVITY</span>
@@ -27,26 +40,27 @@ export default function ActivitiesListView({ onBack, onActivitySelect, onNavigat
                         <span className="table-col">RATING</span>
                         <span className="table-col chevron-col"></span>
                     </div>
-                    {activities.map((activity, i) => (
-                        <div
-                            key={i}
-                            className="table-row"
-                            onClick={() => onActivitySelect(activity)}
-                        >
-                            <span className="table-col activity-col">{activity.name.toUpperCase()}</span>
-                            <span className="table-col">{activity.times}</span>
-                            <span className="table-col">{activity.rating}</span>
-                            <span className="table-col chevron-col"><ChevronRight size={16} /></span>
-                        </div>
-                    ))}
+                    {[...activities]
+                        .sort((a, b) => (activityRatings[b.name] || 0) - (activityRatings[a.name] || 0))
+                        .map((activity, i) => (
+                            <div
+                                key={i}
+                                className="table-row"
+                                onClick={() => onActivitySelect(activity)}
+                            >
+                                <span className="table-col activity-col">{activity.name}</span>
+                                <span className="table-col">{activityCounts[activity.name] || 0}</span>
+                                <span className="table-col">{(activityRatings[activity.name] || 0).toFixed(1)}</span>
+                                <span className="table-col chevron-col"><ChevronRight size={16} /></span>
+                            </div>
+                        ))}
                 </div>
-
-                <button className="choose-activity-btn">Choose activity</button>
             </main>
 
             <nav className="bottom-nav">
                 <button className="nav-item" onClick={() => onNavigate('home')}><Home size={22} /></button>
                 <button className="nav-item active" onClick={() => onNavigate('activities')}><Smile size={22} /></button>
+                <button className="nav-item" onClick={() => onNavigate('chat')}><MessageCircle size={22} /></button>
                 <button className="nav-item" onClick={onSettingsClick}><Settings size={22} /></button>
             </nav>
         </div>

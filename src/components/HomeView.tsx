@@ -1,10 +1,11 @@
-import { Home, Smile, Settings, ChevronRight, History } from 'lucide-react';
+import { Home, Smile, Settings, ChevronRight, History, MessageCircle } from 'lucide-react';
 import { Activity, activities, dailyStats, getStressEmoji, getStressColor } from './data';
 
 interface ToastNotification {
     id: number;
     message: string;
     threshold: number;
+    suggestedActivity: Activity;
 }
 
 interface HomeViewProps {
@@ -16,7 +17,7 @@ interface HomeViewProps {
     onDailyStatsClick: () => void;
     onSettingsClick: () => void;
     onActivitySelect: (activity: Activity) => void;
-    onNavigate: (view: 'home' | 'activities') => void;
+    onNavigate: (view: 'home' | 'activities' | 'chat') => void;
     onSnooze: (toastId: number) => void;
     onDoActivity: (toast: ToastNotification) => void;
     activeTab: 'stress' | 'activities';
@@ -38,24 +39,29 @@ export default function HomeView({
 }: HomeViewProps) {
     return (
         <div className="dashboard-container">
-            {/* Toast Notifications */}
+            {/* Toast Notifications - Phone notification style */}
             <div className="toast-container">
-                {toasts.map((toast) => (
-                    <div key={toast.id} className={`toast toast-${toast.threshold >= 75 ? 'danger' : toast.threshold >= 50 ? 'warning' : 'info'}`}>
-                        <div className="toast-content">
-                            <span className="toast-icon">⚠️</span>
-                            <span>{toast.message}</span>
+                {toasts.length > 0 && (() => {
+                    const toast = toasts[toasts.length - 1];
+                    return (
+                        <div key={toast.id} className="toast">
+                            <div className="toast-header">
+                                <div className="toast-app-icon">🧘</div>
+                                <span className="toast-app-name">ActiveColour</span>
+                                <span className="toast-time">now</span>
+                            </div>
+                            <div className="toast-body">{toast.message}</div>
+                            <div className="toast-actions">
+                                <button className="toast-btn toast-btn-snooze" onClick={() => onSnooze(toast.id)}>
+                                    Snooze
+                                </button>
+                                <button className="toast-btn toast-btn-activity" onClick={() => onDoActivity(toast)}>
+                                    Do Activity
+                                </button>
+                            </div>
                         </div>
-                        <div className="toast-actions">
-                            <button className="toast-btn toast-btn-snooze" onClick={() => onSnooze(toast.id)}>
-                                Snooze
-                            </button>
-                            <button className="toast-btn toast-btn-activity" onClick={() => onDoActivity(toast)}>
-                                Do Activity
-                            </button>
-                        </div>
-                    </div>
-                ))}
+                    );
+                })()}
                 {snoozeFeedback && (
                     <div className="snooze-feedback">
                         {snoozeFeedback}
@@ -106,7 +112,7 @@ export default function HomeView({
                     </div>
                     <div className="daily-stats">
                         {dailyStats.map((stat, i) => (
-                            <div key={i} className="stat-item">
+                            <div key={i} className="stat-item" onClick={onDailyStatsClick}>
                                 <div className="stat-emoji-circle" style={{ backgroundColor: getStressColor(stat.level) }}>
                                     <span className="stat-emoji">{getStressEmoji(stat.level)}</span>
                                 </div>
@@ -144,6 +150,7 @@ export default function HomeView({
             <nav className="bottom-nav">
                 <button className="nav-item active" onClick={() => onNavigate('home')}><Home size={22} /></button>
                 <button className="nav-item" onClick={() => onNavigate('activities')}><Smile size={22} /></button>
+                <button className="nav-item" onClick={() => onNavigate('chat')}><MessageCircle size={22} /></button>
                 <button className="nav-item" onClick={onSettingsClick}><Settings size={22} /></button>
             </nav>
         </div>
