@@ -45,6 +45,34 @@ const initializeActivityStats = () => {
     return { counts, ratings };
 };
 
+// Safe vibration function that won't crash if not supported
+const safeVibrate = (pattern: number | number[]): boolean => {
+    try {
+        if ('vibrate' in navigator && typeof navigator.vibrate === 'function') {
+            return navigator.vibrate(pattern);
+        }
+    } catch (error) {
+        console.warn('Vibration not supported or failed:', error);
+    }
+    return false;
+};
+
+// Vibration patterns for different stress levels (stronger for higher levels)
+const getVibrationPattern = (threshold: number): number[] => {
+    switch (threshold) {
+        case 25:
+            return [100]; // Single short vibration
+        case 50:
+            return [150, 100, 150]; // Two medium pulses
+        case 75:
+            return [200, 100, 200, 100, 200]; // Three strong pulses
+        case 100:
+            return [300, 100, 300, 100, 300, 100, 300]; // Four intense pulses
+        default:
+            return [100];
+    }
+};
+
 export default function PhoneDashboard() {
     const [roomId, setRoomId] = useState('');
     const [isConnected, setIsConnected] = useState(false);
@@ -98,6 +126,9 @@ export default function PhoneDashboard() {
                             };
 
                             setToasts(prev => [...prev, notification]);
+
+                            // Trigger vibration feedback
+                            safeVibrate(getVibrationPattern(event.threshold));
 
                             // Also add to history immediately
                             const historyNotif: HistoryNotification = {

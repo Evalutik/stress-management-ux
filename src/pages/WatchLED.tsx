@@ -1,6 +1,34 @@
 import { useState, useRef } from 'react';
 import { onStressLevelChange, sendThresholdEvent, RoomData } from '../services/firebase';
 
+// Safe vibration function that won't crash if not supported
+const safeVibrate = (pattern: number | number[]): boolean => {
+    try {
+        if ('vibrate' in navigator && typeof navigator.vibrate === 'function') {
+            return navigator.vibrate(pattern);
+        }
+    } catch (error) {
+        console.warn('Vibration not supported or failed:', error);
+    }
+    return false;
+};
+
+// Vibration patterns for different stress levels (stronger for higher levels)
+const getVibrationPattern = (threshold: number): number[] => {
+    switch (threshold) {
+        case 25:
+            return [100]; // Single short vibration
+        case 50:
+            return [150, 100, 150]; // Two medium pulses
+        case 75:
+            return [200, 100, 200, 100, 200]; // Three strong pulses
+        case 100:
+            return [300, 100, 300, 100, 300, 100, 300]; // Four intense pulses
+        default:
+            return [100];
+    }
+};
+
 export default function WatchLED() {
     const [roomId, setRoomId] = useState('');
     const [isConnected, setIsConnected] = useState(false);
@@ -23,6 +51,9 @@ export default function WatchLED() {
                             if (!thresholdsTriggeredRef.current.has(threshold)) {
                                 thresholdsTriggeredRef.current.add(threshold);
                                 sendThresholdEvent(roomId, threshold);
+
+                                // Trigger vibration for this threshold
+                                safeVibrate(getVibrationPattern(threshold));
                             }
                         }
                     });
