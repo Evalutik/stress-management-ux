@@ -2,6 +2,19 @@
 
 This project is a high-fidelity UX prototype designed to test a remote-controlled "LED Stress Bracelet" concept using a Galaxy Watch, a Smartphone, and a Developer Control Panel.
 
+<img width="320" alt="image" src="https://github.com/user-attachments/assets/f5f6797e-e9cb-410c-b3bf-6f1822c44413" />
+<img width="320" alt="image" src="https://github.com/user-attachments/assets/c65e2b2b-23c9-4c14-a0a4-59d75a739103" />
+
+
+<img width="320" alt="image" src="https://github.com/user-attachments/assets/77f7c1f2-d71b-4cd0-b71f-f587de765e1f" />
+<img width="320" alt="image" src="https://github.com/user-attachments/assets/f2c004ed-2c83-44e1-b400-082e966d26e6" />
+
+
+<img width="320" height="1625" alt="image" src="https://github.com/user-attachments/assets/6986432a-62d6-44e0-a438-d8250d1a0260" />
+<img width="320" height="1619" alt="image" src="https://github.com/user-attachments/assets/6ae01589-c2f4-482f-963c-49a187528821" />
+
+
+
 ## 🚀 Concept Overview
 
 The system consists of three parts communicating in real-time via the cloud:
@@ -38,6 +51,8 @@ The system consists of three parts communicating in real-time via the cloud:
 
 > [!IMPORTANT]
 > **For notifications to appear on the Phone**, the Watch, User app, and Dev dashboard must be connected to the same Room ID. The Watch is responsible for detecting threshold crossings and sending alerts. Without the Watch connected, stress levels will update but no notifications will trigger.
+
+<img width="600" alt="image" src="https://github.com/user-attachments/assets/b1381339-f98e-433b-8d8f-5c52efcb6dad" />
 
 ---
 
