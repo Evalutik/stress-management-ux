@@ -10,8 +10,8 @@ This project is a high-fidelity UX prototype designed to test a remote-controlle
 <img width="320" alt="image" src="https://github.com/user-attachments/assets/f2c004ed-2c83-44e1-b400-082e966d26e6" />
 
 
-<img width="320" height="1625" alt="image" src="https://github.com/user-attachments/assets/6986432a-62d6-44e0-a438-d8250d1a0260" />
-<img width="320" height="1619" alt="image" src="https://github.com/user-attachments/assets/6ae01589-c2f4-482f-963c-49a187528821" />
+<img width="320" alt="image" src="https://github.com/user-attachments/assets/6986432a-62d6-44e0-a438-d8250d1a0260" />
+<img width="320" alt="image" src="https://github.com/user-attachments/assets/6ae01589-c2f4-482f-963c-49a187528821" />
 
 
 
